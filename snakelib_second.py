@@ -66,12 +66,14 @@ def _verify_str(value_var, string_var):
 
 
 def _verify_bool(value_var, string_var):
+    # Check if value is a boolean
     if not isinstance(value_var, bool):
         value = "%s is not a boolean for %s, got %s" % (value_var, string_var, str(type(value_var))[1:-1])
         raise _IPyException(value)
 
 
 def _verify_input(value_var, string_var, minimum=None, maximum=None):
+    # Check if value is within the specified bounds
     if minimum is None:
         minimum = float('-inf')
     if maximum is None:
@@ -82,24 +84,24 @@ def _verify_input(value_var, string_var, minimum=None, maximum=None):
     value = "%s is out of bounds, expected range: %s to %s, got: %s" % (string_var, minimum, maximum, value_var)
     raise _IPyException(value)
 
-
+# A class to initialize the tkinter UI in hidden mode
 class _Factory():
     def __init__(self):
-        self.mainroot = _tk.Tk()
-        self.mainroot.withdraw()
-        self.mainroot.update()
+        self.mainroot = _tk.Tk()    # Create main Tkinter root
+        self.mainroot.withdraw()    # Hide the main window
+        self.mainroot.update()      # Update the hidden root
 
-
+# A file input dialog that sets stdin to the selected file
 class _AskInput(object):
     def __init__(self, mainroot):
-        root = _tk.Toplevel(mainroot)
-        root.withdraw()
-        self.f = _tkFileDialog.askopenfilename(parent=root)
-        if self.f != '':
-            _sys.stdin = open(self.f)
-        root.destroy()
+        root = _tk.Toplevel(mainroot)         # Create a new top-level window
+        root.withdraw()                       # Hide it
+        self.f = _tkFileDialog.askopenfilename(parent=root)  # Show open file dialog
+        if self.f != '':    
+            _sys.stdin = open(self.f)           # Redirect stdin to the selected file
+        root.destroy()                          # Destroy dialog window
 
-
+# A dialog box asking user a question with multiple options
 class _AskUser(object):
     def __init__(self, mainroot, question, options):
         root = _tk.Toplevel(mainroot)
@@ -110,20 +112,25 @@ class _AskUser(object):
                             default=0,
                             bitmap=_tkMessageBox.QUESTION,
                             strings=options)
-        self.answer = options[dg.num]
+        self.answer = options[dg.num]      # Store user's answer
         root.destroy()
 
-
+# Instantiate the hidden UI once for use across the app
 _ui_factory = _Factory()
 
-
+# Reads a full snake game run from a file and returns metadata and all frames
 def read_snake_run(file_name):
     with open(file_name) as f:
         # ignore "Width" "Height"
-        hint = f.readline()
+        hint = f.readline()   # First line is a comment or hint
+
+	# Second line: extract width and height of the board
         [_, width, _, height] = f.readline().split()
         width = int(width)
         height = int(height)
+
+	# Third line: optional apple spot (or 0 if not defined)
+	    
         line = f.readline()
         if line.startswith("apple"):
             [_, apple_spot] = line.split()
@@ -132,10 +139,12 @@ def read_snake_run(file_name):
             apple_spot = 0
         has_more = True
         frames = []
+
+	# Read all frames until EOF
         while has_more:
-            frame = read_snake_frame(width, height, f)
+            frame = read_snake_frame(width, height, f)  # Read one frame
             frames.append(frame)
-            # there are more lines if we can successfully read two empty lines
+            # # Detect if more frames exist: 2 empty lines separate frames
             # readline gives '' for EOF
             c = f.readline()
             has_more = c.endswith("\n")
@@ -145,39 +154,40 @@ def read_snake_run(file_name):
 
     return hint, apple_spot, (width, height), frames
 
-
+# Reads a single animation frame
 def read_snake_frame(width, height, f):
-    events = read_events(f)
-    board = read_board(width, height, f)
+    events = read_events(f)                # First, read the event section
+    board = read_board(width, height, f)   # Then, read the board/grid state 
     return (events, board)
 
-
+# Reads events from the file until "---" is found
 def read_events(f):
     event_line = f.readline().strip()
     events = []
     while not (event_line == "---"):
         if event_line.startswith("apple_spot"):
             [_, apple_pick] = event_line.split()
-            events.append(("apple_spot", int(apple_pick)))
+            events.append(("apple_spot", int(apple_pick)))  # Add apple event
         else:
             [event_name, data] = event_line.split(':')
-            events.append((event_name, data))
+            events.append((event_name, data))               # Add other event types
 
         event_line = f.readline()
-        event_line = event_line.strip()
+        event_line = event_line.strip()                 # Read next event line
     return events
 
 
+# Reads a 2D board/grid of width x height
 def read_board(width, height, f):
     board = []
     for y in range(height):
         line = f.readline().strip()
         if line == "GameOver":
-            return "GameOver"
+            return "GameOver"          # Return game over signal
         grid_line = []
         for x in range(width):
-            grid_line.append(ascii_to_cell_type(line[x]))
-        board.append(grid_line)
+            grid_line.append(ascii_to_cell_type(line[x]))      # Convert char to cell type
+        board.append(grid_line)                 # Add row to board
     return board
 
 
