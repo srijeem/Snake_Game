@@ -5,21 +5,70 @@
 This repository contains two projects: a basic animation of a circle moving across a grid and a classic implementation of the Snake game.
 
 ### Animation:
-#### Circle Movement: The animation starts with a circle at position (0, 0), moving right one square at a time. Once the circle reaches the end of a row, 
-it moves to the first square of the next row. When it reaches the last row, it wraps around back to (0, 0).
+#### Circle Movement: The animation starts with a circle positioned at (0, 0) - the top-left corner of the grid.
 
-## Circle to Apple Toggle: Pressing the spacebar changes the circle into an apple. Pressing the spacebar again switches it back to the circle.
+- The circle moves one square to the right on each step.
+
+- When the circle reaches the end of a row, it:
+
+- Moves to the first square of the next row (i.e., wraps to the start of the next line).
+
+- This continues row by row until the circle reaches the last square of the last row.
+
+- Once the circle reaches the end of the grid, it wraps around back to (0, 0) and the animation repeats.
+
+
+## Circle to Apple Toggle: 
+
+- By default, the circle is displayed on the grid.
+
+- When the user presses the spacebar:
+
+- The circle changes into an apple.
+
+- Pressing the spacebar again:
+
+- The apple switches back to a circle.
+
+- This toggle can be repeated any number of times during the animation.
 
 ## Snake Game:
-### Basic Mechanics: The snake starts with a length of 2 at the top left of the grid. The player controls the snake with arrow keys, 
-guiding it towards apples to grow longer.
+### Basic Mechanics: 
 
-### Apple Eating: Each time the snake eats an apple, it grows by one block.
+- The snake starts with a length of 2 at the top-left corner of the grid.
 
-### Wrap-Around: If the snake reaches the edge of the screen, it re-emerges from the opposite side.
+- The player controls the snake using the arrow keys.
+  
+- The objective is to guide the snake toward apples that appear on the grid.
+  
+    -Each time the snake eats an apple:
+  
+-The snake grows longer by one segment.
+
+- The game continues as the snake moves and grows, becoming more challenging to navigate without collision.
+
+### Apple Eating: 
+-Each time the snake eats an apple, it grows by one block.
+
+### Wrap-Around: 
+
+-If the snake reaches the edge of the screen, it re-emerges from the opposite side.
 
 ### Game Over: The game ends if the snake collides with itself, at which point the "Game Over" screen is displayed.
 
 ## Testing:
-The code includes a testing framework that ensures the animation and game logic work as intended. It uses unit tests to validate the correct behavior of the circle's movement, 
-apple placement, snake growth, direction changes, and game-over conditions.
+
+The code includes a testing framework to ensure the animation and game logic function correctly.
+
+It uses unit tests to validate key components of the game:
+
+- Circle movement - verifies the correct step-by-step progression across the grid.
+
+- Apple placement — ensures apples appear in valid, unoccupied positions.
+
+- Snake growth — checks that the snake increases in length when eating an apple.
+
+- Direction changes — confirms the snake responds accurately to arrow key inputs.
+
+- Game-over conditions — validates that the game ends correctly upon collision with walls or the snake itself.
+
