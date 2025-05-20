@@ -1,11 +1,13 @@
+# Required for formatting text
 import textwrap
 import sys
 
-#Fixme: this thing is messy
+#Fixme: FIXME: messy import structure, to be cleaned
 import threading
 import time
 import tkinter
 
+# Constants representing different cell types in the game
 EMPTY = 0
 FOOD = 1
 SNAKE = 2
@@ -23,13 +25,12 @@ import random as _random
 import sys as _sys
 import datetime as _datetime
 import pickle as _pickle
-import urllib.request, urllib.error, urllib.parse
-import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse, urllib.error
 import json
 
 from abc import ABC, abstractmethod
-import random
 
+# Custom exception class
 
 class _IPyException(Exception):
     def __init__(self, value):
@@ -37,9 +38,11 @@ class _IPyException(Exception):
 
     def __str__(self):
         return repr(self.parameter)
-
+	    
+# Input validation helper functions
 
 def _verify_int(value_var, string_var, minimum=None, maximum=None):
+     # Check if value is an int and within optional bounds	
     if not isinstance(value_var, int):
         value = "%s not an int for %s, got %s" % (value_var, string_var, str(type(value_var))[1:-1])
         raise _IPyException(value)
@@ -47,6 +50,7 @@ def _verify_int(value_var, string_var, minimum=None, maximum=None):
 
 
 def _verify_float(value_var, string_var, minimum=None, maximum=None):
+    # Check if value is a float (or int) and within bounds
     if not isinstance(value_var, float):
         if not isinstance(value_var, int):
             value = "%s is not a float or int for %s, got %s" % (value_var, string_var, str(type(value_var))[1:-1])
@@ -55,6 +59,7 @@ def _verify_float(value_var, string_var, minimum=None, maximum=None):
 
 
 def _verify_str(value_var, string_var):
+    # Check if value is a string
     if not isinstance(value_var, str):
         value = "%s is not a string for %s, got %s" % (value_var, string_var, str(type(value_var))[1:-1])
         raise _IPyException(value)
