@@ -72,3 +72,23 @@ It uses unit tests to validate key components of the game:
 
 - Game-over conditions — validates that the game ends correctly upon collision with walls or the snake itself.
 
+
+
+
+### Snake Game Automated Test Suite
+
+- This Python script runs automated tests on the Snake game implementation.
+
+- It verifies the game's core functionality through multiple test scenarios.
+
+- Tests include checking:
+
+   - Game start behavior
+
+   - Snake movement
+
+   - Apple consumption and snake growth
+
+   - Screen wrap-around mechanics
+
+   - Game over conditions
