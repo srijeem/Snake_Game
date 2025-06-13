@@ -1,5 +1,5 @@
+## All imports here
 import time
-
 import snakelib_second as snakelib # Import custom snake testing library with alias snakelib
 import snake                       # Import the student's snake game module to be tested
 from unittest import TestCase      # Import TestCase class for creating unit tests
