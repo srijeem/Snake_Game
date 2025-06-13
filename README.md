@@ -77,6 +77,8 @@ It uses unit tests to validate key components of the game:
 
 ### Snake Game Automated Test Suite
 
+## test_snake_gui.py
+
 - This Python script runs automated tests on the Snake game implementation.
 
 - It verifies the game's core functionality through multiple test scenarios.
