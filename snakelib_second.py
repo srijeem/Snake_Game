@@ -190,30 +190,31 @@ def read_board(width, height, f):
         board.append(grid_line)                 # Add row to board
     return board
 
-
+# Function to convert an ASCII character to a cell type constant
 def ascii_to_cell_type(c):
     if c == 'A':
-        return FOOD
+        return FOOD         # 'A' represents FOOD
     elif c == 'X':
-        return SNAKE
+        return SNAKE        # 'X' represents part of the SNAKE
     elif c == '=':
-        return WALL
+        return WALL         # '=' represents a WALL
     else:
-        return EMPTY
+        return EMPTY        # Any other character is treated as EMPTY space
 
-
+# Function to convert a cell type constant back to an ASCII character
 def cell_type_to_ascii(cell_type):
     if cell_type == FOOD:
-        return 'A'
+        return 'A'                 # FOOD is shown as 'A'
     elif cell_type == SNAKE:
-        return 'X'
+        return 'X'                 # SNAKE is shown as 'X'
     else:
-        return '.'
+        return '.'                 # All others (WALL or EMPTY) are shown as '.'
 
-
+# Abstract Base Class for Snake Interface
 class SnakeInterface(ABC):
 
     def __init__(self):
+	# Initialize constants from the _Snake class
         self.EMPTY = _Snake.EMPTY
         self.FOOD = _Snake.FOOD
         self.SNAKE = _Snake.SNAKE
@@ -322,31 +323,37 @@ class SnakeInterface(ABC):
 class SnakeTestInterface(SnakeInterface):
     def __init__(self, test_filename):
         super().__init__()
+	# Read the test file and extract game parameters
         hint, self.next_random, (self.width, self.height), self.frames = read_snake_run(test_filename)
-        self.cur_board = [[EMPTY for x in range(self.width)] for y in range(self.height)]
-        (self.events, self.want_board) = self.frames[0]
-        self.frame_history = []
-        self.frames = self.frames[1:]
 
-        self.error_msg = ""
-        if hint != "":
+	# Initialize the current board with empty cells
+        self.cur_board = [[EMPTY for x in range(self.width)] for y in range(self.height)]
+        (self.events, self.want_board) = self.frames[0] # Get initial frame's events and expected board
+        self.frames = self.frames[1:]                    # Remaining frames after the first
+
+
+        self.error_msg = ""                              # Collects debugging messages for errors        
+        if hint != "":                                   # Add hint (if any) to the error message
             wrapped_hint = textwrap.fill("Hint: " + hint, width=80)
             self.error_msg += wrapped_hint + "\n\n"
 
-        self.error_msg += "apple_spot " + str(self.next_random) + "\n"
+        self.error_msg += "apple_spot " + str(self.next_random) + "\n"      # Record the next expected random apple spot
         self.test_succeeded = False
         self.game_over = False
         width = self.width
         height = self.height
         scale = 3
+
+	# Validate dimensions and scale
         _verify_int(width, "Width", 1)
         _verify_int(height, "Height", 1)
         _verify_float(scale, 'Scale', 0.25, 4.0)
-        global _ui_factory
-        self.fps = 1
+        global _ui_factory                             # UI initialization
+        self.fps = 1                                   # Frames per second for animation
         self.pause = False
         self.current_frame = 0
-        self.snake_interface = _Snake(width * 2 + 2, height + 1, _ui_factory.mainroot, scale, "Student Snake")
+        self.snake_interface = _Snake(width * 2 + 2, height + 1, _ui_factory.mainroot, scale, "Student Snake")        # Initialize the snake UI for testing
+	# Provide usage instructions
         self.snake_interface.print_("Please refrain from spamming any keys, only press one key per frame\n")
         self.snake_interface.print_("Press [SPACEBAR] to pause the simulation\n")
         self.snake_interface.print_("Press [ARROW LEFT] to go back one step\n")
@@ -356,19 +363,24 @@ class SnakeTestInterface(SnakeInterface):
 
 
     def fill_boards(self):
+	# Display the student and reference board labels
         text1 = tkinter.Label(self.snake_interface.root, text="Student Snake")
         text2 = tkinter.Label(self.snake_interface.root, text="Reference Snake")
         text1.place(x=0, y=0)
         text2.place(x=(self.width + 2) * self.snake_interface.size_per_coord, y=0)
+	# Draw borders between the student and reference boards
         self.snake_interface.place(0 + self.width, 0, self.snake_interface.WALL)
         self.snake_interface.place(1 + self.width, 0, self.snake_interface.WALL)
         [self.snake_interface.place(a, 0, self.snake_interface.WALL) for a in range(self.width * 2 + 2)]
+
+	# Draw the expected board (reference)
         for y in range(len(self.want_board)):
             self.snake_interface.place(0 + self.width, y + 1, self.snake_interface.WALL)
             self.snake_interface.place(1 + self.width, y + 1, self.snake_interface.WALL)
             for x in range(len(self.want_board[y])):
                 self.print_(str((x, y)))
                 self.snake_interface.place(x + 2 + self.width, y + 1, self.want_board[y][x])
+	 # Draw the current student board
         for y in range(len(self.cur_board)):
             self.snake_interface.place(0 + self.width, y, self.snake_interface.WALL)
             self.snake_interface.place(1 + self.width, y, self.snake_interface.WALL)
@@ -380,6 +392,7 @@ class SnakeTestInterface(SnakeInterface):
         return self.width, self.height
 
     def place(self, x, y, color):
+	# Place a cell in the student board and update the UI
         _verify_int(x, 'X', 0, self.snake_interface.width - 1)
         _verify_int(y, 'Y', 0, self.snake_interface.height - 1)
         # 0 = empty, 1 = food, 2 = snake, 3 = wall, 4 = food_t, 5 = snake_t, 6 = wall_t
@@ -388,6 +401,7 @@ class SnakeTestInterface(SnakeInterface):
         self.cur_board[y][x] = color
 
     def place_transparent(self, x, y, color):
+	# Place a semi-transparent version of the object (for animations)
         _verify_int(x, 'X', 0, self.snake_interface.width - 1)
         _verify_int(y, 'Y', 0, self.snake_interface.height - 1)
         # 0 = empty, 1 = food_t, 2 = snake_t, 3 = wall_t (before next step in code)
@@ -398,28 +412,28 @@ class SnakeTestInterface(SnakeInterface):
             self.place(x, y, color + 3)
         self.snake_interface.clear()
 
-    def clear(self):
+    def clear(self):                         # Clear the board and reset to empty
         self.snake_interface.clear()
         self.cur_board = [[EMPTY for x in range(self.width)] for y in range(self.height)]
 
-    def printerr(self, s, end='\n'):
+    def printerr(self, s, end='\n'):         # Append an error/debug message
         self.error_msg += s + end
 
-    def raise_err(self, message):
+    def raise_err(self, message):            # Raise an error with detailed message
         raise _IPyException(message + "\n\n" + self.error_msg)
 
-    def show(self):
+    def show(self):                          # Compare the current board to the expected board and show UI
         self.fill_boards()
         self.snake_interface.show()
         if self.test_succeeded:
             return
         self.printerr("---")
 
-        def print_line(line):
+        def print_line(line):                # Helper to print a board line
             for c in line:
                 self.printerr(cell_type_to_ascii(c), end='')
 
-        if self.game_over and self.want_board != "GameOver":
+        if self.game_over and self.want_board != "GameOver":                        # Compare expected vs actual board states with error handling
             self.printerr("Want".ljust(self.width) + " " + "Got".ljust(self.width))
             print_line(self.want_board[0])
             self.printerr(" ", end='')
@@ -456,7 +470,8 @@ class SnakeTestInterface(SnakeInterface):
             if self.cur_board != self.want_board:
                 raise _IPyException("Did not get the correct board!\n\n" + self.error_msg)
         self.printerr("")
-
+	    
+        # Advance to next frame if any
         if self.frames == []:
             self.test_succeeded = True
             return
@@ -468,6 +483,7 @@ class SnakeTestInterface(SnakeInterface):
         time.sleep(self.snake_interface.interval * 0.001)
 
     def get_event(self):
+	    # Handle input and step logic
         keyboard_event = self.snake_interface.get_event()
         if keyboard_event.name.strip() == "arrow" and keyboard_event.data.strip() == "u":
             self.set_animation_speed(min(20, self.fps + 1))
@@ -489,7 +505,7 @@ class SnakeTestInterface(SnakeInterface):
             self.want_board = self.frame_history[self.current_frame - 2][1]
             self.fill_boards()
             self.snake_interface.show()
-            return Event("", "")
+            return Event("", "")           # Return a no-op event while paused
         if len(self.frame_history) > 0:
             self.want_board = self.frame_history[-1][1]
         if not self.events:
@@ -497,7 +513,7 @@ class SnakeTestInterface(SnakeInterface):
                 return Event("quit", "")
             else:
                 raise _IPyException("Forgot to call ui.show() before first get_event or forgot to call show after alarm : refresh\n\n" + self.error_msg)
-        else:
+        else:                 # Process next event
             event = self.events[0]
             if event[0].strip() == "apple_spot":
                 self.next_random = event[1]
@@ -507,32 +523,35 @@ class SnakeTestInterface(SnakeInterface):
             self.events = self.events[1:]
             self.printerr(event[0] + " " + event[1])
             return Event(event[0].strip(), event[1].strip())
-
-    def set_game_over(self):
+		
+    # Utility methods used in the UI logic of the Snake game
+    def set_game_over(self):   
+	# Sets the game as over and updates the UI accordingly
         self.game_over = True
         self.snake_interface.set_game_over()
 
     def set_animation_speed(self, fps):
+	 # Sets the frame rate (animation speed) for the game loop
         self.fps = fps
         _verify_float(fps, "Animation speed")
         self.snake_interface.set_animation_speed(fps)
 
-    def print_(self, text):
+    def print_(self, text):     # Override for printing messages (used in some interfaces)
         pass
 
-    def clear_text(self):
+    def clear_text(self):       # Override to clear text from a display area
         pass
 
-    def wait(self, ms):
+    def wait(self, ms):         # Override for waiting a number of milliseconds
         pass
 
-    def random(self, maximum):
+    def random(self, maximum):             # Deterministically returns a value using next_random (mocking randomness)
         return self.next_random % maximum
 
-    def close(self):
+    def close(self):            # Override for closing the interface
         pass
 
-    def stay_open(self):
+    def stay_open(self):        # Override to keep the interface open         
         pass
 
 
@@ -558,11 +577,13 @@ class SnakeUserInterface(SnakeInterface):
         _verify_float(scale, 'Scale', 0.25, 1.0)
         global _ui_factory
         self.snake_interface = _Snake(width, height, _ui_factory.mainroot, scale)
-        hint, self.next_random, (self.width, self.height), self.frames = read_snake_run(test_filename)
+	# Read test scenario data
+        hint, self.next_random, (self.width, self.height), self.frames = read_snake_run(test_filename)           
         self.cur_board = [[EMPTY for x in range(self.width)] for y in range(self.height)]
         (self.events, self.want_board) = self.frames[0]
         self.frames = self.frames[1:]
 
+	# Error hint and status flags
         self.error_msg = ""
         if hint != "":
             wrapped_hint = textwrap.fill("Hint: " + hint, width=80)
@@ -572,10 +593,10 @@ class SnakeUserInterface(SnakeInterface):
         self.test_succeeded = False
         self.game_over = False
 
-    def board_size(self):
+    def board_size(self):                                                  # Returns the width and height of the board
         return self.width, self.height
 
-    def set_game_over(self):
+    def set_game_over(self):                                               # Marks the game as over
         self.game_over = True
         self.snake_interface.set_game_over()
 
@@ -754,13 +775,15 @@ class Event(object):
         self.name = name
         self.data = data
 
+    # Return a user-friendly string representation of the object
     def __str__(self):
         return self.name + " : " + self.data
 
+    # Return an unambiguous string representation of the object
     def __repr__(self):
         return self.name + " : " + self.data
 
-
+# A simple holder class for snake body parts or visual elements, storing their coordinates and color
 class _SnakeHolder(object):
     def __init__(self, x, y, color):
         self.x = x
@@ -780,7 +803,7 @@ class _Snake(object):
         self.to_show_queue = _Queue.Queue(maxsize=0)
         self.event_queue = _Queue.Queue(maxsize=0)
 
-        # copy params
+        # copy params  (# Game configuration)
         self.width = width
         self.height = height
         self.scale = scale
@@ -791,8 +814,8 @@ class _Snake(object):
         # start the main window
         self.root = _tk.Toplevel(mainroot)
         self.root.title(title)
-        self.root.protocol("WM_DELETE_WINDOW", self.callback)
-        self.root.bind("<Escape>", self.callback)
+        self.root.protocol("WM_DELETE_WINDOW", self.callback)    # Handle window close
+        self.root.bind("<Escape>", self.callback)                # Handle Esc key to exit
         self.root.resizable(False, False)
 
         # calculate sizes
@@ -831,32 +854,40 @@ class _Snake(object):
         self.scrollbar.config(command=self.textarea.yview)
         self.textarea.config(state=_tk.DISABLED)
 
+	# Initialize timer and animation settings
         self.interval = 0
         self.alarm_speed = 0
         self.timer = self.milliseconds()
 
+	 # Update main Tk root window
         global _ui_factory
         _ui_factory.mainroot.update()
 
+    # Sets the game over flag to True
     def set_game_over(self):
         self.game_over = True
 
+    # Callback function to close the window and exit the application
     def callback(self, event=None):
         self.root.destroy()
         _os._exit(0)
 
+    # Returns current time in milliseconds
     def milliseconds(self):
         return _time.time() * 1000
 
+    # Places food, snake on the canvas at position (x, y)
     def place(self, x, y, color):
         element = _SnakeHolder(x, y, color)
         self.to_show_queue.put(element)
 
+    # Clears the entire canvas by filling it with empty cells
     def clear(self):
         for x in range(self.width):
             for y in range(self.height):
                 self.place(x, y, self.EMPTY)
-
+		    
+    # Displays queued elements on the canvas, respecting layering and visibility
     def show(self):
         try:
             if self.game_over:
@@ -875,7 +906,7 @@ class _Snake(object):
                     # add 1 to i, because 0 is empty [same as doing color - 1]
                     # thus, if 0, then it doesn't match with 1 to 6
                     # therefore putting the whole position to hidden
-                    if element.color == i + 1:
+                    if element.color == i + 1:                             # Show only the element matching the color index
                         for e in position[i]:
                             self.c.itemconfig(e, state=_tk.NORMAL)
                     else:
@@ -887,6 +918,7 @@ class _Snake(object):
         global _ui_factory
         _ui_factory.mainroot.update()
 
+     # Waits for and returns the next input event from the queue
     def get_event(self):
         global _ui_factory
         _ui_factory.mainroot.update()
@@ -900,6 +932,7 @@ class _Snake(object):
                 self.wait(wait_time)
                 _ui_factory.mainroot.update()
 
+    # Sets the animation speed by defining frame interval based on FPS
     def set_animation_speed(self, fps):
         current_time = self.milliseconds()
         if fps <= 0:
@@ -911,6 +944,7 @@ class _Snake(object):
         self.interval = int(1000.0 / fps)
         self.refresh_event()
 
+    # Prints text to the text area in the UI
     def print_(self, text):
         self.textarea.config(state=_tk.NORMAL)
         self.textarea.insert(_tk.END, text)
@@ -919,6 +953,7 @@ class _Snake(object):
         global _ui_factory
         _ui_factory.mainroot.update()
 
+    # Clears the text output area
     def clear_text(self):
         self.textarea.config(state=_tk.NORMAL)
         self.textarea.delete(1.0, _tk.END)
@@ -927,22 +962,26 @@ class _Snake(object):
         global _ui_factory
         _ui_factory.mainroot.update()
 
+     # Sleeps for a given number of milliseconds
     def wait(self, ms):
         try:
             _time.sleep(ms * 0.001)
         except:
             self.close()
 
+    # Closes the GUI window and exits the program
     def close(self):
         self.root.destroy()
         _os._exit(0)
 
+    # Returns a random integer less than the given maximum
     def random(self, maximum=1):
         return int(_random.random() * maximum)
 
+    # Creates canvas elements representing game pieces based on type and position
     def create_piece(self, x0, y0, img, mix):
         result = []
-        if img == self.FOOD:
+        if img == self.FOOD:                            # Create food graphics with green top and red body
             r = int(255 / (1 + mix))
             g = int(64 / (1 + mix))
             b = int(64 / (1 + mix))
@@ -963,7 +1002,7 @@ class _Snake(object):
             y2 = y0 + scale * self.size_per_coord
             result.append(
                 self.c.create_line(x1, y1, x2, y2, state=_tk.HIDDEN, fill="#%02X%02X%02X" % (r, g, b), width=2))
-        if img == self.SNAKE:
+        if img == self.SNAKE:                                                     # Create a snake body segment
             r = int(32 / (1 + mix))
             g = int(255 / (1 + mix))
             b = int(0 / (1 + mix))
@@ -973,7 +1012,7 @@ class _Snake(object):
             y2 = y0 + self.size_per_coord
             result.append(
                 self.c.create_oval(x1, y1, x2, y2, state=_tk.HIDDEN, fill="#%02X%02X%02X" % (r, g, b), width=0))
-        if img == self.WALL:
+        if img == self.WALL:                                  # Create a wall segment
             r = int(200 / (1 + mix))
             g = int(100 / (1 + mix))
             b = int(0 / (1 + mix))
@@ -986,6 +1025,7 @@ class _Snake(object):
 
         return result
 
+    # Initializes visual representations of snake, food, and walls
     def create_snake_pieces(self):
         mixer = 0, 0, 0, 1, 1, 1
         imgtype = self.FOOD, self.SNAKE, self.WALL, self.FOOD, self.SNAKE, self.WALL
@@ -999,10 +1039,12 @@ class _Snake(object):
                     img = self.create_piece(x0, y0, imgtype[n], mixer[n])
                     boards[n][i].append(img)
 
+    # Prepares the canvas by binding events and creating game objects
     def fill_canvas(self):
         self.bind_events()
         self.create_snake_pieces()
 
+    # Handles mouse movement and generates events when the mouse moves over different cells
     def motion_event(self, event):
         if not self.mouse_on_screen:
             return
@@ -1018,6 +1060,7 @@ class _Snake(object):
             self.last_x = x_new
             self.last_y = y_new
 
+    # Handles when the mouse enters the game canvas
     def enter_window_event(self, event):
         x_new = event.x / self.size_per_coord
         y_new = event.y / self.size_per_coord
@@ -1026,15 +1069,18 @@ class _Snake(object):
         self.last_y = y_new
         self.mouse_on_screen = True
 
+    # Handles when the mouse leaves the canvas
     def leave_window_event(self, event):
         self.generate_event("mouseexit", "%d %d" % (self.last_x, self.last_y))
         self.mouse_on_screen = False
 
+     # Handles Alt+number key events
     def alt_number_event(self, event):
         if event.char == event.keysym:
             if ord(event.char) >= ord('0') and ord(event.char) <= ord('9'):
                 self.generate_event("alt_number", event.char)
 
+    # Processes keyboard input and generates corresponding events
     def key_event(self, event):
         if event.char == event.keysym:
             if ord(event.char) >= ord('0') and ord(event.char) <= ord('9'):
@@ -1068,11 +1114,13 @@ class _Snake(object):
         else:
             self.generate_event("other", event.keysym)
 
+    # Handles mouse click events and translates them to cell coordinates
     def click_event(self, event):
         x = event.x / self.size_per_coord
         y = event.y / self.size_per_coord
         self.generate_event("click", "%d %d" % (x, y))
 
+     # Generates an "alarm" event if it's time to refresh based on the animation interval
     def refresh_event(self):
         current_time = self.milliseconds()
         threshold = current_time - self.timer - self.interval
@@ -1080,10 +1128,12 @@ class _Snake(object):
             self.generate_event("alarm", "refresh")
             self.timer = current_time
 
+     # Adds an event to the event queue
     def generate_event(self, name, data):
         event = Event(name, data)
         self.event_queue.put(event)
 
+    # Binds mouse and keyboard events to the canvas for user interaction
     def bind_events(self):
         self.c.focus_set()  # to redirect keyboard input to this widget
         self.c.bind("<Motion>", self.motion_event)
